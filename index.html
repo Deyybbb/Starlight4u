@@ -1338,23 +1338,13 @@ function launchHearts() {
 }
 
 /* ============================================================
-   MUSIC SYSTEM (YOUTUBE HACK)
+   MUSIC SYSTEM (UPDATED HTML5 AUDIO)
 ============================================================ */
 function playMusic() {
-  // Creates an invisible YouTube video player
-  const player = document.createElement("iframe");
-  
-  // The ID here is CwGbMYLjIpQ from your YouTube link
-  player.src = "music.mp3";
-  
-  // Allow the browser to autoplay it
-  player.allow = "autoplay";
-  
-  // Hide it completely from the screen
-  player.style.cssText = "width:0; height:0; border:0; position:absolute; left:-9999px;";
-  
-  // Inject it into the page to start playing
-  document.body.appendChild(player);
+  // Use standard HTML5 Audio for local mp3 files
+  const audio = new Audio("music.mp3");
+  audio.loop = true; // Makes the music loop continuously
+  audio.play().catch(err => console.log("Audio play error:", err));
 }
 
 /* ============================================================
