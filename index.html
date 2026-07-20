@@ -517,9 +517,17 @@
 
   /* ========================================
      LETTER SCROLL SCREEN
+     WIDENED: letter-wrap now scales up to ~800px (was capped at
+     480px) on larger screens so the letter text wraps across a
+     wider column, needs less vertical height, and no longer forces
+     scrolling to read the full letter.
   ======================================== */
+  #letterScreen {
+    padding: clamp(1rem, 3vw, 2rem);
+  }
+
   #letterScreen .letter-wrap {
-    max-width: 480px;
+    max-width: min(92vw, 800px);
     width: 100%;
   }
 
@@ -555,18 +563,22 @@
     transition: max-height 1.8s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 
+  /* Cap raised generously and the max-height is also cleared to
+     "none" via JS once the unroll finishes (see goToLetter()), so
+     the scroll can never clip content again regardless of length
+     or screen size. */
   .scroll-paper.unrolled {
-    max-height: 900px;
+    max-height: 3000px;
   }
 
   .scroll-paper-inner {
-    padding: clamp(1.6rem, 5vw, 2.4rem) clamp(1.2rem, 4vw, 2rem);
+    padding: clamp(1.6rem, 4vw, 2.6rem) clamp(1.4rem, 5vw, 3.2rem);
     text-align: left;
   }
 
   .letter-para {
     font-family: var(--font-display);
-    font-size: clamp(1rem, 2.4vw, 1.2rem);
+    font-size: clamp(1rem, 2vw, 1.15rem);
     font-weight: 300;
     font-style: italic;
     line-height: 1.85;
@@ -1363,23 +1375,33 @@ function goToPoem() {
    The paper scroll unrolls automatically, then the paragraphs
    fade in one by one, then a Continue button appears leading
    to the final question.
+
+   The letter box is now wide (up to 800px) so paragraphs wrap
+   across more of the screen and take less vertical space, and
+   the max-height cap is cleared entirely after the unroll so
+   the full letter is always readable without being clipped or
+   forced into a scrollable column.
 ============================================================ */
 function goToLetter() {
   showScreen("letterScreen");
 
   const paper = document.getElementById("scrollPaper");
-  const paraIds = ["lp0", "lp1", "lp2", "lp3", "lp4"];
+  const paraIds = ["lp0", "lp1", "lp2", "lp3", "lp4", "lp5"];
 
   // reset state in case the user navigates back and forth
   paper.classList.remove("unrolled");
-  paraIds.forEach(id => document.getElementById(id).classList.remove("visible"));
+  paper.style.maxHeight = ""; // clear any inline override from a previous visit
+  paraIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("visible");
+  });
   document.getElementById("letterContinueBtn").style.opacity = "0";
 
   // Unroll the scroll shortly after the screen appears
   setTimeout(() => { paper.classList.add("unrolled"); }, 400);
 
   // Once unrolled, reveal each paragraph in sequence
-  const paraDelays = [2200, 3100, 4000, 4900, 5600];
+  const paraDelays = [2200, 3100, 4000, 4900, 5600, 6300];
   paraDelays.forEach((delay, i) => {
     setTimeout(() => {
       const el = document.getElementById(paraIds[i]);
@@ -1387,10 +1409,16 @@ function goToLetter() {
     }, delay);
   });
 
+  // Once fully unrolled, drop the max-height cap entirely so the
+  // letter can never be clipped again (handles resizes, long text, etc.)
+  setTimeout(() => {
+    paper.style.maxHeight = "none";
+  }, 400 + 1800); // unroll start delay + CSS transition duration
+
   // Show the continue button after the last paragraph
   setTimeout(() => {
     document.getElementById("letterContinueBtn").style.opacity = "1";
-  }, 6600);
+  }, 7300);
 }
 
 /* ============================================================
