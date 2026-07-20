@@ -84,6 +84,7 @@
     transition: opacity 0.9s ease;
     text-align: center;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .screen.active {
@@ -517,13 +518,20 @@
 
   /* ========================================
      LETTER SCROLL SCREEN
-     WIDENED: letter-wrap now scales up to ~800px (was capped at
-     480px) on larger screens so the letter text wraps across a
-     wider column, needs less vertical height, and no longer forces
-     scrolling to read the full letter.
+     Made mobile-safe: the screen now aligns content to the top
+     (instead of vertically centering it), so long letters scroll
+     naturally from the very first paragraph instead of clipping
+     the top when the content is taller than the viewport — this
+     is the classic flex "centered content that overflows" bug on
+     phones/iPhone Safari. Font sizes, line-height and padding are
+     also tightened on small screens so the letter needs less
+     scrolling overall.
   ======================================== */
   #letterScreen {
     padding: clamp(1rem, 3vw, 2rem);
+    justify-content: flex-start;
+    padding-top: clamp(2.5rem, 8vh, 4rem);
+    padding-bottom: clamp(2.5rem, 8vh, 4rem);
   }
 
   #letterScreen .letter-wrap {
@@ -572,19 +580,19 @@
   }
 
   .scroll-paper-inner {
-    padding: clamp(1.6rem, 4vw, 2.6rem) clamp(1.4rem, 5vw, 3.2rem);
+    padding: clamp(1.4rem, 4vw, 2.6rem) clamp(1.2rem, 5vw, 3.2rem);
     text-align: left;
   }
 
   .letter-para {
     font-family: var(--font-display);
-    font-size: clamp(1rem, 2vw, 1.15rem);
+    font-size: clamp(0.92rem, 2vw, 1.15rem);
     font-weight: 300;
     font-style: italic;
-    line-height: 1.85;
+    line-height: 1.7;
     color: var(--text-main);
     text-shadow: 0 0 18px rgba(184,200,255,0.15);
-    margin-bottom: 1.1rem;
+    margin-bottom: 0.95rem;
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.9s ease, transform 0.9s ease;
@@ -752,12 +760,20 @@
     .modal-box { padding: 1.4rem 1.2rem; }
     .admin-label { min-width: 90px; }
     .pick-star { font-size: 2rem; }
-  }
 
-  /* Scrollbar styling */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(184,200,255,0.2); border-radius: 2px; }
+    /* Letter screen: tighten everything so phones need far less
+       scrolling to read the whole letter, and the top is never
+       cut off since #letterScreen no longer vertically centers. */
+    #letterScreen { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    #letterScreen .letter-title { margin-bottom: 0.9rem; }
+    .scroll-paper-inner { padding: 1.1rem 1rem; }
+    .letter-para {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      margin-bottom: 0.7rem;
+    }
+    #letterContinueBtn { margin-top: 1.4rem; }
+  }
 </style>
 </head>
 <body>
@@ -1376,14 +1392,19 @@ function goToPoem() {
    fade in one by one, then a Continue button appears leading
    to the final question.
 
-   The letter box is now wide (up to 800px) so paragraphs wrap
-   across more of the screen and take less vertical space, and
-   the max-height cap is cleared entirely after the unroll so
-   the full letter is always readable without being clipped or
-   forced into a scrollable column.
+   The letter box is wide (up to 800px) so paragraphs wrap across
+   more of the screen and take less vertical space. The screen no
+   longer vertically centers its content (see #letterScreen CSS),
+   so on phones the letter always starts scrolled to the top and
+   is never clipped, however long it is.
 ============================================================ */
 function goToLetter() {
   showScreen("letterScreen");
+
+  // Make sure the phone/browser scroll position starts at the top
+  // of the letter screen every time it opens.
+  const screenEl = document.getElementById("letterScreen");
+  if (screenEl) screenEl.scrollTop = 0;
 
   const paper = document.getElementById("scrollPaper");
   const paraIds = ["lp0", "lp1", "lp2", "lp3", "lp4", "lp5"];
